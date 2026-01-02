@@ -12,6 +12,10 @@ headers = {
 session = requests.Session()
 session.get("https://www.nseindia.com", headers=headers)
 
+@app.route("/")
+def home():
+    return "API WORKING"
+
 @app.route("/stocks")
 def stocks():
     url = "https://www.nseindia.com/api/equity-stockIndices?index=SECURITIES%20IN%20F%26O"
@@ -21,4 +25,4 @@ def stocks():
 
 if __name__ == "__main__":
     app.run()
-
+    
