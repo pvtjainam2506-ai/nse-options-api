@@ -1,8 +1,10 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import requests
 import time
 
 app = Flask(__name__)
+CORS(app)  # ✅ THIS IS THE FIX
 
 BASE_URL = "https://www.nseindia.com"
 
