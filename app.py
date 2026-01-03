@@ -4,7 +4,7 @@ import requests
 import time
 
 app = Flask(__name__)
-CORS(app)  # ✅ THIS IS THE FIX
+CORS(app)  # allow Netlify / browser access
 
 BASE_URL = "https://www.nseindia.com"
 
@@ -18,7 +18,7 @@ headers = {
 session = requests.Session()
 
 def init_session():
-    session.get(BASE_URL, headers=headers)
+    session.get(BASE_URL, headers=headers, timeout=10)
     time.sleep(1)
 
 @app.route("/")
@@ -29,10 +29,19 @@ def home():
 def stocks():
     init_session()
     url = BASE_URL + "/api/equity-stockIndices?index=SECURITIES%20IN%20F%26O"
-    r = session.get(url, headers=headers, timeout=10)
-    data = r.json()
-    symbols = [i["symbol"] for i in data["data"]]
-    return jsonify(symbols)
+
+    # retry logic for Render cold start + NSE delay
+    for _ in range(3):
+        try:
+            r = session.get(url, headers=headers, timeout=10)
+            r.raise_for_status()
+            data = r.json()
+            symbols = [i["symbol"] for i in data["data"]]
+            return jsonify(symbols)
+        except Exception:
+            time.sleep(2)
+
+    return jsonify({"error": "NSE not ready"}), 503
 
 if __name__ == "__main__":
     app.run()
